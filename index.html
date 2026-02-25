@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AgriSense Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #f4f6f7;
+        }
+
+        h1 {
+            background: #2e7d32;
+            color: white;
+            padding: 15px;
+        }
+
+        form {
+            margin: 20px;
+        }
+
+        select, input, button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        .chart-container {
+            width: 95%;
+            max-width: 1100px;
+            height: 500px;
+            margin: 40px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px #ccc;
+        }
+
+        #countdown {
+            font-weight: bold;
+            font-size: 20px;
+            color: #2e7d32;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🌾 AgriSense Pro – Smart AI Irrigation</h1>
+
+<form method="POST">
+
+<label>Select Plant:</label>
+<select name="plant">
+{% for plant in plants %}
+<option value="{{ plant }}">{{ plant }}</option>
+{% endfor %}
+</select>
+
+<label>Growth Stage:</label>
+<select name="stage">
+<option>Seed</option>
+<option>Vegetative</option>
+<option>Flowering</option>
+<option>Harvest</option>
+</select>
+
+<label>Soil Moisture (%):</label>
+<input type="number" name="soil" min="0" max="100" required>
+
+<label>Field Size (Acres):</label>
+<input type="number" name="acre" step="0.1" min="0.1" required>
+
+<button type="submit">Analyze</button>
+
+</form>
+
+{% if decision %}
+<div class="result" id="resultBox"
+     style="border: 4px solid 
+     {% if decision == 'Pump ON' %}green
+     {% elif decision == 'Pump OFF' %}red
+     {% else %}gray
+     {% endif %};">
+
+<h2 id="pumpStatus">{{ decision }}</h2>
+
+<p>💧 Water Time: {{ water_time }} minutes</p>
+<p>🌡 Temperature: {{ temperature }} °C</p>
+<p>🌧 Rain Forecast: {{ rain_forecast }}</p>
+<p>🧠 Reason: {{ reason }}</p>
+<p>🚰 Total Water Used: {{ total_water_used }} Liters</p>
+<p>💧 Water Saved Today: {{ water_saved }} Liters</p>
+<p>🌍 Total Water Saved: {{ total_water_saved }} Liters</p>
+
+</div>
+{% endif %}
+
+{% if decision == "Pump ON" %}
+<p id="countdown"></p>
+
+<script>
+let timeLeft = Math.floor({{ water_time|default(0) }} * 60);
+
+let timer = setInterval(function() {
+
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+
+    document.getElementById("countdown").innerHTML =
+        "⏳ Pump will auto shut OFF in: " + minutes + "m " + seconds + "s";
+
+    if (timeLeft <= 0) {
+        clearInterval(timer);
+
+        document.getElementById("countdown").innerHTML =
+            "✅ Pump automatically turned OFF 🔊";
+
+        // Change status text
+        document.getElementById("pumpStatus").innerText = "Pump OFF";
+
+        // Change border to red
+        document.getElementById("resultBox").style.border = "4px solid red";
+
+        // Play buzzer
+        document.getElementById("buzzerSound").play();
+    }
+
+    timeLeft--;
+
+}, 1000);
+</script>
+{% endif %}
+
+<div class="chart-container">
+<h2>📊 AI Irrigation Trend Analysis</h2>
+<canvas id="trendChart"></canvas>
+</div>
+
+<script>
+const ctx = document.getElementById('trendChart').getContext('2d');
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ days_history | tojson }},
+        datasets: [
+            {
+                label: 'Water Time (minutes)',
+                data: {{ water_history | tojson }},
+                borderWidth: 3,
+                tension: 0.3
+            },
+            {
+                label: 'Soil Moisture (%)',
+                data: {{ moisture_history | tojson }},
+                borderWidth: 3,
+                tension: 0.3
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+
+<!-- 🔊 BUZZER SOUND -->
+<audio id="buzzerSound">
+    <source src="{{ url_for('static', filename='buzzer.mp3') }}" type="audio/mpeg">
+</audio>
+
+</body>
+</html>
