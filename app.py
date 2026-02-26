@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request
 from plant_data import plants
 import requests
+import os
 
 app = Flask(__name__)
 
 # 🌦 Weather API
-API_KEY = "d0879ffd7785eae5ce18f42ba0bce48f"
+API_KEY = os.environ.get("d0879ffd7785eae5ce18f42ba0bce48f")
 CITY = "Erode"
 
 # 📊 Data storage
@@ -124,4 +125,5 @@ def home():
     )
 
 if __name__ == "__main__":
+
     app.run(debug=True)
