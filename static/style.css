@@ -1,0 +1,33 @@
+body {
+    font-family: Arial;
+    background: #f4f7f9;
+    text-align: center;
+}
+
+h1 {
+    background: #2e7d32;
+    color: white;
+    padding: 15px;
+}
+
+form {
+    margin: 20px;
+}
+
+select, input, button {
+    padding: 8px;
+    margin: 10px;
+}
+
+button {
+    background: #2e7d32;
+    color: white;
+    border: none;
+}
+
+.result {
+    background: white;
+    padding: 15px;
+    margin: 20px;
+    border-radius: 10px;
+}
